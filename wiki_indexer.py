@@ -15,7 +15,10 @@ STOP_WORDS.add("cite")
 inverted_index = {}
 doc_index = {}
 doc_id = 0
+file_id = 1
 stat_tokens = 0
+
+BLOCK_SIZE = 20000
 
 def postings():
     
@@ -139,6 +142,45 @@ def parse_references(body):
 
     return data
 
+INTERMED_SIZE = 10000
+
+def intermediate_index():
+    
+    filename = f"intermed{file_id - 1}.txt"
+    fp = open(filename, "w")
+
+    terms = 0
+    temp_cnt = 1
+    temp_write = ""
+
+    data = sorted(doc_index.keys())
+
+    for token in data:
+        if token not in inverted_index:
+            inverted_index[token] = ""
+        
+        counts = doc_index[token]
+
+        field = f"{token}:D{doc_id}"
+        prefixes = ["t", "i", "b", "c", "l", "r"]
+        for i in range(6):
+            if counts[i] > 0:
+                field += f"{prefixes[i]}{counts[i]}"
+
+        field += "\n"
+        temp_write += field
+        terms += 1
+
+        if terms == INTERMED_SIZE * temp_cnt:
+            fp.write(temp_write)
+            temp_write = ""
+            temp_cnt += 1
+    
+    fp.write(temp_write)
+    temp_write = ""
+
+    fp.close()
+
 
 class WikiHandler(xml.sax.ContentHandler):
     def __init__(self):
@@ -157,6 +199,8 @@ class WikiHandler(xml.sax.ContentHandler):
     def endElement(self, tag):
         global doc_id
         global doc_index
+        global file_id
+        global inverted_index
 
         if tag == "title":
             self.title = self.current
@@ -188,6 +232,11 @@ class WikiHandler(xml.sax.ContentHandler):
             doc_id += 1
             doc_index = {}
 
+            if doc_id == BLOCK_SIZE * file_id:
+                intermediate_index()
+                inverted_index = {}
+                file_id += 1
+
     def characters(self, content):
         self.current += content
 
@@ -197,6 +246,8 @@ def parse(data):
     Handler = WikiHandler()
     parser.setContentHandler(Handler)
     parser.parse(data)
+
+    intermediate_index()
 
 if __name__ == "__main__":
     f = sys.argv[1]
@@ -208,6 +259,6 @@ if __name__ == "__main__":
     with open(f"{sys.argv[2]}/inverted_index.json", "w") as fp:
         json.dump(inverted_index, fp)
 
-    f = open(sys.argv[3], "w")
-    f.write(f"{stat_tokens}\n{len(inverted_index.keys())}\n")
-    f.close()
+    # f = open(sys.argv[3], "w")
+    # f.write(f"{stat_tokens}\n{len(inverted_index.keys())}\n")
+    # f.close()
