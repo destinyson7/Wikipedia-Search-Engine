@@ -10,21 +10,24 @@ python3 and PyStemmer library is required to run the search engine.
 
 To create the inverted index, run the following command.
 
-```bash
-./index.sh <path_to_wiki_dump_file> <path_to_index_folder>
+```python
+python3 wiki_indexer.py <path_to_wiki_dump_folder> <path_to_index_folder>
 ```
 
-The arguments are the paths to the Wikipedia XML dump file and the folder where the inverted index is to be created and stored.
+The arguments are the paths to the Wikipedia XML dump folder which contains all the wiki dump files and the folder where the inverted index is to be created and stored.
 
 ## Querying
 
 To search, run the following command.
 
-```bash
-./search.sh <path_to_index_folder> <query_string>
+```python
+python3 wiki_search.py <path_to_query_file>
 ```
 
-It will output the postings lists of every word in the query that is present in the index that matches the given field (if given any).
+## Conventions
+1. Index is split into many files. Each file's name is a number starting from 0 up until 3076 and the file extension is .txt.
 
-### Submission for Phase 1
+2. There is a titles folder. Each file's name is a number starting from 0 up until 4914 and the file extension is .txt.
+
+### Submission for Phase 2
 #### Tanish Lad (2018114005)

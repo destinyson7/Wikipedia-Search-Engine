@@ -16,6 +16,7 @@ inverted_index = {}
 doc_index = {}
 titles = []
 doc_id = 0
+tmp_files = 0
 file_id = 1
 stat_tokens = 0
 
@@ -204,6 +205,7 @@ class WikiHandler(xml.sax.ContentHandler):
         global file_id
         global inverted_index
         global titles
+        global tmp_files
 
         if tag == "title":
             self.title = self.current
@@ -220,8 +222,9 @@ class WikiHandler(xml.sax.ContentHandler):
             indexer(preprocess(self.title), 0)
             indexer(preprocess(self.body), 2)
 
-            print(self.title)
+            print(doc_id)
             titles.append(self.title)
+            tmp_files += 1
             # print(stat_tokens)
 
             postings()
@@ -236,17 +239,19 @@ class WikiHandler(xml.sax.ContentHandler):
             doc_id += 1
             doc_index = {}
 
-            if doc_id == BLOCK_SIZE * file_id:
+            if tmp_files == BLOCK_SIZE:
                 intermediate_index()
                 inverted_index = {}
                 file_id += 1
+                tmp_files = 0
                 titles = []
         
         elif tag == "mediawiki":
             intermediate_index()
             inverted_index = {}
-            titles = []
             file_id += 1
+            tmp_files = 0
+            titles = []
 
     def characters(self, content):
         self.current += content
